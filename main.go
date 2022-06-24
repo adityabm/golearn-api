@@ -59,8 +59,11 @@ func main() {
 	api.POST("/email-check", userHandler.EmailCheck)
 	api.POST("/upload-profile-picture", userHandler.UploadProfilePicture)
 	
-	router.GET("/documentation/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	
+	envType := os.Getenv("APP_ENV")
+	 
+	if envType != "production" {
+		router.GET("/documentation/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
 
 	appPort := os.Getenv("APP_PORT")
 	router.Run(":" + appPort)
