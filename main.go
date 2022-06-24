@@ -4,14 +4,31 @@ import (
 	"golearn/handler"
 	"golearn/models/user"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
+func init() {
+
+    err := godotenv.Load(".env")
+
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
+}
+
 func main() {
-	dsn := "root:@tcp(127.0.0.1:3306)/golearn?charset=utf8mb4&parseTime=True&loc=Local"
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	dsn := dbUser + ":" + dbPassword + "@tcp(" + dbHost + ":" + dbPort + ")/" + dbName + "?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -29,5 +46,6 @@ func main() {
 	api.POST("/login", userHandler.Login)
 	api.POST("/email-check", userHandler.EmailCheck)
 
-	router.Run(":8822")
+	appPort := os.Getenv("APP_PORT")
+	router.Run(":" + appPort)
 }
