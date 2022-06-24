@@ -1,0 +1,154 @@
+basePath: /api/v1
+definitions:
+  helper.Meta:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  helper.Response:
+    properties:
+      data: {}
+      meta:
+        $ref: '#/definitions/helper.Meta'
+    type: object
+  user.EmailCheck:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  user.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.RegisterUserInput:
+    properties:
+      email:
+        example: mail@mail.com
+        type: string
+      fullname:
+        example: John Doe
+        type: string
+      occupation:
+        example: Software Engineer
+        type: string
+      password:
+        example: "12345678"
+        minLength: 8
+        type: string
+    required:
+    - email
+    - fullname
+    - occupation
+    - password
+    type: object
+host: localhost:8822
+info:
+  contact: {}
+  title: Crowdfunding API v1
+  version: 1.0.0
+paths:
+  /email-check:
+    post:
+      consumes:
+      - application/json
+      description: Check availability of email in Database
+      parameters:
+      - description: Email
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.EmailCheck'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: To check availability of email
+      tags:
+      - Auth API
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login user and it will response the user with token
+      parameters:
+      - description: Login info
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.LoginInput'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: First step for Loging in user
+      tags:
+      - Auth API
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: Register new user from form than insert it to Database and it will
+        response the user with token
+      parameters:
+      - description: User info
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterUserInput'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: First step for Registering user
+      tags:
+      - Auth API
+swagger: "2.0"

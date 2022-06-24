@@ -11,6 +11,7 @@ type Service interface {
 	Register(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
 	EmailCheck(input EmailCheck) (bool, error)
+	SaveProfilePicture(ID int, FileLocation string) (User, error)
 }
 
 type service struct {
@@ -22,6 +23,15 @@ func NewService(repository Repository) *service {
 }
 
 func (s *service) Register(input RegisterUserInput) (User, error) {
+	checkUser, err := s.repository.SearchByEmail(input.Email)
+	if err != nil {
+		return checkUser, err
+	}
+
+	if(checkUser.ID != 0) {
+		return checkUser, errors.New("Email already exists")
+	}
+
 	user := User{}
 	user.Fullname = input.Fullname
 	user.Occupation = input.Occupation
@@ -82,4 +92,20 @@ func (s *service) EmailCheck(input EmailCheck) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (s *service) SaveProfilePicture(ID int, FileLocation string) (User, error) {
+	user, err := s.repository.SearchByID(ID)
+	if err != nil {
+		return user, err
+	}
+
+	user.ProfilePicture = FileLocation
+
+	updatedUser, err := s.repository.Update(user)
+	if err != nil {
+		return updatedUser, err
+	}
+
+	return updatedUser, nil
 }

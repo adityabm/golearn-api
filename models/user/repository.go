@@ -7,6 +7,8 @@ import (
 type Repository interface {
 	Create(user User) (User, error)
 	SearchByEmail(email string) (User, error)
+	SearchByID(ID int) (User, error)
+	Update(user User) (User, error)
 }
 
 type repository struct {
@@ -34,5 +36,25 @@ func (r *repository) SearchByEmail(email string) (User, error) {
 		return user, err
 	}
 
+	return user, nil
+}
+
+func (r *repository) SearchByID(ID int) (User, error) {
+	var user User
+
+	err := r.db.Where("id = ?", ID).First(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (r *repository) Update(user User) (User, error) {
+	err := r.db.Save(&user).Error
+	if err != nil {
+		return user, err
+	}
+	
 	return user, nil
 }

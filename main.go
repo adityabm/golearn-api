@@ -10,6 +10,11 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	_ "golearn/docs"
+
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func init() {
@@ -20,6 +25,12 @@ func init() {
         log.Fatal("Error loading .env file")
     }
 }
+
+// @title Crowdfunding API v1
+// @version 1.0.0
+
+// @host localhost:8822
+// @BasePath /api/v1
 
 func main() {
 	dbUser := os.Getenv("DB_USER")
@@ -42,9 +53,14 @@ func main() {
 	router := gin.Default()
 	api := router.Group("/api/v1")
 
+
 	api.POST("/user", userHandler.Register)
 	api.POST("/login", userHandler.Login)
 	api.POST("/email-check", userHandler.EmailCheck)
+	api.POST("/upload-profile-picture", userHandler.UploadProfilePicture)
+	
+	router.GET("/documentation/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	
 
 	appPort := os.Getenv("APP_PORT")
 	router.Run(":" + appPort)
