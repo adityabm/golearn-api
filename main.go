@@ -3,11 +3,15 @@ package main
 import (
 	"golearn/auth"
 	"golearn/handler"
+	"golearn/helper"
 	"golearn/models/user"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -59,7 +63,7 @@ func main() {
 	api.POST("/user", userHandler.Register)
 	api.POST("/login", userHandler.Login)
 	api.POST("/email-check", userHandler.EmailCheck)
-	api.POST("/upload-profile-picture", userHandler.UploadProfilePicture)
+	api.POST("/upload-profile-picture", authorizeMiddleware(authService, userService), userHandler.UploadProfilePicture)
 	
 	envType := os.Getenv("APP_ENV")
 	 
@@ -69,4 +73,49 @@ func main() {
 
 	appPort := os.Getenv("APP_PORT")
 	router.Run(":" + appPort)
+}
+
+func authorizeMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func (c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if !strings.Contains(authHeader, "Bearer") {
+			response := helper.JsonResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+	
+		arrayToken := strings.Split(authHeader, " ")
+		if len(arrayToken) != 2 {
+			response := helper.JsonResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+	
+		tokenString := arrayToken[1]
+		
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			response := helper.JsonResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		claim, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			response := helper.JsonResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		userID := int(claim["user_id"].(float64))
+
+		user, err := userService.GetUserByID(userID)
+		if err != nil {
+			response := helper.JsonResponse("Unauthorized", http.StatusUnauthorized, "error", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		c.Set("loggedUser", user)
+	}	
 }

@@ -160,7 +160,8 @@ func (h *userHandler) UploadProfilePicture(c *gin.Context) {
 		return
 	}
 
-	userID := 1
+	loggedUser := c.MustGet("loggedUser").(user.User)
+	userID := loggedUser.ID
 
 	// Set name to epoch
 	now := time.Now()
