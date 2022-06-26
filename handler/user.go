@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"golearn/auth"
 	"golearn/helper"
 	"golearn/models/user"
 	"net/http"
@@ -14,10 +15,11 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 // Register godoc
@@ -50,7 +52,13 @@ func (h *userHandler) Register(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(newUser, "token")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		errorsMessage := gin.H{"errors": err.Error()}
+		c.JSON(http.StatusBadRequest, helper.JsonResponse("Something went wrong", http.StatusBadRequest, "error", errorsMessage))
+		return
+	}
+	formatter := user.FormatUser(newUser, token)
 
 	response := helper.JsonResponse("User has been registered", http.StatusOK, "success", formatter)
 
@@ -86,7 +94,13 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(newUser, "token")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		errorsMessage := gin.H{"errors": err.Error()}
+		c.JSON(http.StatusBadRequest, helper.JsonResponse("Something went wrong", http.StatusBadRequest, "error", errorsMessage))
+		return
+	}
+	formatter := user.FormatUser(newUser, token)
 
 	response := helper.JsonResponse("User has been logged in", http.StatusOK, "success", formatter)
 
